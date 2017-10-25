@@ -1,0 +1,43 @@
+\documentclass{article}
+\title{Homework 4}
+\date{2017-10-23}
+\author{Sameer Narang}
+\begin{document}
+\section{6 Support Vector Machine via Pegasos}
+    \subsection{6.1 Gradient of the SVM objective function at a single training point}
+    Objective function:
+    $J_{i}(w)=\frac{\lambda}{2}\|w\|^{2}+\max\left\{ 0,1-y_{i}w^{T}x_{i}\right\}$
+    \newline
+    \newline
+    For $y_{i}w^{T}x_{i} > 1$, $J_{i}$ is 0 (and differentiable) throughout so the gradient $\nabla J_{i}(w)$ is 0 as well
+    \newline
+    \newline
+    For  $y_{i}w^{T}x_{i} < 1$, $J_{i}$ is again differentiable at every point:
+    \newline
+    $\nabla _{w} J_{i}(w) = \lambda w - y_{i} \nabla _{w} (w^{T})x_{i}$
+    \newline
+    \newline
+    where $y_{i}$ is a scalar with value 1 or -1, and $x_{i}$ is a given (fixed since we selected a single training point) vector in $R^{d}$
+    \newline
+    \newline
+    The gradient $\nabla _{w} J_{i}(w)$ thus evaluates to:
+    $\lambda w - y_{i}x_{i}$, given that $y_{i}w^{T}x_{i} > 1$
+    \newline[$\nabla _{w} (w^{T})$ is $1_{d}^{T}$ by definition]
+    \newline
+    \newline
+    Finally, at $y_{i}w^{T}x_{i} = 1$, $\nabla _{w} J_{i}(w)$ is undefined since the one-sided derivatives at this point are different. In other words, $J_{i}(w)$ is not differentiable at $y_{i}w^{T}x_{i} = 1$.
+
+    \subsection{6.2 Sub-gradient of SVM objective function}
+    Objective function:
+    $J_{i}(w)=\frac{\lambda}{2}\|w\|^{2}+\max\left\{ 0,1-y_{i}w^{T}x_{i}\right\}$
+    \newline
+    \newline
+    To show that a sub-gradient of the above objective function is given by:
+    \newline
+    \begin{eqnarray*}
+    g & = & \begin{cases}
+    \lambda w-y_{i}x_{i} & \mbox{for }y_{i}w^{T}x_{i}<1\\
+    \lambda w & \mbox{for }y_{i}w^{T}x_{i}ge1.
+    \end{cases}
+    \end{eqnarray*}
+\end{document}
