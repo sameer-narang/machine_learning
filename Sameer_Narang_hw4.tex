@@ -1,15 +1,41 @@
 \documentclass{article}
+\usepackage{courier}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage[letterpaper]{geometry}
+\geometry{verbose}
+\usepackage{color}
+\usepackage{url}
+\usepackage{algorithm2e}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage[unicode=true,
+ bookmarks=false,
+ breaklinks=false,pdfborder={0 0 1},backref=section,colorlinks=true]
+ {hyperref}
+
+ 
 \title{Homework 4}
 \date{2017-10-23}
 \author{Sameer Narang}
 \begin{document}
-\section{6 Support Vector Machine via Pegasos}
-    \subsection{6.1 Gradient of the SVM objective function at a single training point}
+\section{Solutions (Section4) Load and split the data}
+    \subsection{Training data set size: 1500, validation data set size: 500}
+    \lstinputlisting[language=Python]{load_and_split_data.py}
+\section{Solutions (Section5) Bag of words}
+    \subsection{Create "bag-of-words" representation from text}
+    The function  convert-\-str-\-to-\-bag-\-of-\-words listed in the section above  discards character sequences defined in the list SEQUENCES-\-TO-\-IGNORE and returns a bag of words representation in the form of a Python Counter class object.
+\section{Solutions (Section 6) - Support Vector Machine via Pegasos}
+    \subsection{Solution 6.1 - Gradient of the SVM objective function at a single training point}
     Objective function:
     $J_{i}(w)=\frac{\lambda}{2}\|w\|^{2}+\max\left\{ 0,1-y_{i}w^{T}x_{i}\right\}$
     \newline
     \newline
-    For $y_{i}w^{T}x_{i} > 1$, $J_{i}$ is 0 (and differentiable) throughout so the gradient $\nabla J_{i}(w)$ is 0 as well
+    For $y_{i}w^{T}x_{i} > 1$, $J_{i}$ is 0 (and differentiable) throughout so the gradient is
+    \newline
+    $\nabla J_{i}(w)$ = $\nabla (\frac{\lambda}{2}\|w\|^{2})$
+                      = $\lambda w$
     \newline
     \newline
     For  $y_{i}w^{T}x_{i} < 1$, $J_{i}$ is again differentiable at every point:
@@ -21,13 +47,16 @@
     \newline
     \newline
     The gradient $\nabla _{w} J_{i}(w)$ thus evaluates to:
+    \newline
     $\lambda w - y_{i}x_{i}$, given that $y_{i}w^{T}x_{i} > 1$
-    \newline[$\nabla _{w} (w^{T})$ is $1_{d}^{T}$ by definition]
+    \newline
+    \newline
+    [$\nabla _{w} (w^{T})$ is $1_{d}^{T}$ by definition]
     \newline
     \newline
     Finally, at $y_{i}w^{T}x_{i} = 1$, $\nabla _{w} J_{i}(w)$ is undefined since the one-sided derivatives at this point are different. In other words, $J_{i}(w)$ is not differentiable at $y_{i}w^{T}x_{i} = 1$.
 
-    \subsection{6.2 Sub-gradient of SVM objective function}
+    \subsection{Solution 6.2 - Sub-gradient of SVM objective function}
     Objective function:
     $J_{i}(w)=\frac{\lambda}{2}\|w\|^{2}+\max\left\{ 0,1-y_{i}w^{T}x_{i}\right\}$
     \newline
@@ -36,8 +65,86 @@
     \newline
     \begin{eqnarray*}
     g & = & \begin{cases}
-    \lambda w-y_{i}x_{i} & \mbox{for }y_{i}w^{T}x_{i}<1\\
-    \lambda w & \mbox{for }y_{i}w^{T}x_{i}ge1.
+    \lambda w-y_{i}x_{i} & \mbox {for }y_{i}w^{T}x_{i}<1\\
+    \lambda w & \mbox{for }y_{i}w^{T}x_{i} \ge 1
     \end{cases}
     \end{eqnarray*}
+    \newline
+    \newline
+    As seen in the above derivation of the expression for gradient, $J_{i}(w)$ is differentiable at all points but $y_{i}w^{T}x_{i} = 1$. The derived expression for gradient is also the sub-gradient:
+    \newline
+    \newline
+    $\nabla J_{i}(w) = \lambda w$ for $y_{i}w^{T}x_{i} > 1$
+    \newline
+    and, $\nabla J_{i}(w) = \lambda w - y_{i}x_{i}$ for $y_{i}w^{T}x_{i} < 1$
+    \newline
+    \newline
+    At $y_{i}w^{T}x_{i} = 1$, we will prove that $\lambda w$ is a subgradient using \textit{proof by contradiction}. Let's assume that $\lambda w$ is not a subgradient at $y_{i}w^{T}x_{i} = 1$, and thus violates the definition, giving rise to the following condition
+    \newline
+    \newline
+    i.e. $\exists$ u such that
+    \newline
+    \newline
+    $\lambda\|u\|^{2} + \max\left\{ 0,1-y_{i}u^{T}x_{i}\right\} < \lambda\|v\|^{2} + \max\left\{ 0,1-y_{i}v^{T}x_{i}\right\} + \lambda v^{T}(u - v)$ given that $y_{i}v^{T}x_{i} = 1$
+    \newline => $\|u\|^{2} - \|v\|^{2} + 2y_{i}(v^{T}x_{i} - u^{T}x_{i}) < 2v^{T}(u - v)$
+    \newline
+    \newline
+    All the above quantities are scalars. Expanding the norms to matrix products, we get
+    \newline
+    $u^{T}u - u^{T}v + v^{T}u - v^{T}v + 2y_{i}v^{T}x_{i} - 2y_{i}u^{T}x_{i} < 2v^{T}u - 2v^{T}v$
+    \newline
+    \newline
+    All these quantities are scalars and $u^{T}v = v^{T}u$ and we are looking at the point $y_{i}v^{T}x_{i} = 1$, so we get
+    \newline
+    \newline
+    $2 (y_{i}v^{T}x_{i} - 1) < 0$ for $J_{i}(w)$ to not be a subgradient, and this is clearly not possible in our setting of $y_{i}v^{T}x_{i} = 1$.
+    
+    \subsection{Solution 6.3 - SGD with step size $\eta_{t}=1/\left(\lambda t\right)$}
+    The psedu-code in section 6 is equivalent to SGD with the dynamic step size given by $\eta_{t}=1/\left(\lambda t\right)$. Each pass over the m data points represents an epoch. In SGD, we calculate the prediction function given by $w$ at each data point by taking a step in the direction given by the sub-gradient at that point, as we iterate through the points until a stopping condition is met. This is exactly what the pseudo-code does, with each step being in the direction:
+    \newline
+    \newline
+    For $y_{i}w_{t}^{T}x_{i} < 1$,
+    \newline
+    $\lambda w_{t} - y_{i}x_{i}$ with a step size of $\eta_{t}=1/\left(\lambda t\right)$. i.e.
+    \newline
+    $w_{t+1} = w_{t} - \eta_{t} * (\lambda w_{t} - y_{i}x_{i})$
+    \newline
+    $= (1-\eta_{t} \lambda) w_{t} + \eta_{t}y_{i}x_{i}$, which is the same as pseudo-code
+    \newline
+    \newline
+    Also, for $y_{i}w_{t}^{T}x_{i} >= 1$,
+    the sub-gradient is given by $\lambda w_{t}$, and with a step size of $\eta_{t}$,
+    SGD sets $w_{t+1} = w_{t} - \eta_{t} \lambda w_{t}$
+    \newline
+    $= (1-\eta_{t} \lambda)w_{t}$
+    \newline
+    \newline
+    Thus, the pseudo code is equivalent to SGD with step size of $\eta_{t}=1/\left(\lambda t\right)$ done at each point $(x_{i}, y_{i})$.
+    
+    \subsection{Solution 6.4 - Pegasos implementation}
+    \lstinputlisting[language=Python]{pegasos_implementation.py}
+    
+    \subsection{Solution 6.5 - Pegasos implementation using sparse matrices}
+    \lstinputlisting[language=Python]{vectorized_pegasos_implementation.py}
+    
+    \subsection{Solution 6.6 - Run time comparison}
+    The timt taken by both the versions of the algorithm depends on the choice of $\lambda$ - less regularization i.e. smaller values lead to longer run times. However,the sparse matric algorithm is several times faster. For $\lambda = 0.1$, the sparse matrix version takes just 3.41 seconds compared to 20.44 seconds taken by the dictionary based implementation.
+    
+    \subsection {Solution 6.7 - Function to return percent error}
+    Such a function is defined in the section above within the implementation of class Vectorized\-Pegasos\-Classifier. The function $\_evaluate\_obj\_function$ returns both the percent error as well as the objective function value for a given model.
+     
+    \subsection{Solution 6.8 - Search for $\lambda$}
+    \begin{center}
+    \begin{tabular}{|c|c|c|}
+    \hline
+    Lambda & Error rate on (validation data) & Objective Function Value \\
+    1.00 e-3 & 22.10\% & - \\
+    1.00 e-4 & 18.99\% & 0.227 \\
+    0.50 e-4 & 19.20\% & 0.445 \\
+    0.25 e-4 & 18.00\% & 0.883 \\
+    1.00 e-5 & 17.20\% & 2.155 \\
+    \hline
+    \end{tabular}
+    \end{center}
+        We should choose $\lambda = 1 e-4$ as the error rate on validation data begins to climb up at that point, and this point thus offers a good deal of regularization without sacrificing the model fit.
 \end{document}
