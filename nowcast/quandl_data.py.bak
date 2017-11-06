@@ -1,0 +1,184 @@
+#!/usr/bin/python3.5
+
+import quandl
+
+import util
+
+from util import *
+
+quandl.ApiConfig.api_key = "8DrzzNxwBzDzh_1jE6Dj"
+
+QUANDL_DATA = {
+    "WTI_DeptOfEnergy": {
+        "refresh": False,
+        "code": "EIA/PET_RWTC_D",
+        "format": Constant.TS,
+        "data": None
+    },
+    "AAPL_Zacks": {
+        "refresh": False,
+        "source": "ZACKS/FC",
+        "ticker": "AAPL",
+        "format": Constant.DT,
+        "data": None
+    },
+    "SHORT_TERM_NAIRU_FedReserve": {
+        "refresh": False,
+        "code": "FRED/NROUST",
+        "format": Constant.TS,
+        "data": None
+    },
+    "CCY_AND_DEPOS_WorldBank": {
+        "refresh": False,
+        "code": "WPSD/USA_DP_DOD_DLCD_CR_GG_CD",
+        "format": Constant.TS,
+        "data": None
+    },
+    "CURR_ACC_BAL_WorldBank": {
+        "refresh": False,
+        "code": "WGEP/USA_BNCABFUNDCD_",
+        "format": Constant.TS,
+        "data": None
+    },
+    "UNEMPLOYMENT_FedReserve": {
+        "refresh": False,
+        "code": "FRED/M08K4BUSM148NNBR",
+        "format": Constant.TS,
+        "data": None
+    },
+    "BIZ_ACTIVITY_FedReserve": {
+        "refresh": False,
+        "code": "FRED/M12007USM511SNBR",
+        "format": Constant.TS,
+        "data": None
+    },
+    "20Y_YIELD_FedReserve": {
+        "refresh": False,
+        "code": "FRED/M13058USM156NNBR",
+        "format": Constant.TS,
+        "data": None
+    },
+    "NUM_INCORPORATIONS_FedReserve": {
+        "refresh": False,
+        "code": "FRED/M10090USM479NNBR",
+        "format": Constant.TS,
+        "data": None
+    },
+    "EMP_COMPENSATION_FedReserve": {
+        "refresh": False,
+        "code": "FRED/Q08358USQ027SNBR",
+        "format": Constant.TS,
+        "data": None
+    },
+    "FARM_INCOME_FedReserve": {
+        "refresh": False,
+        "code": "FRED/Q0876BUSQ027SNBR",
+        "format": Constant.TS,
+        "data": None
+    },
+    "PERSONAL_SAVING_FedReserve": {
+        "refresh": False,
+        "code": "FRED/Q1091BUSQ027SNBR",
+        "format": Constant.TS,
+        "data": None
+    },
+    ##
+    "M1_FedReserve": {
+        "refresh": False,
+        "code": "FRED/MYAGM1USM052N",
+        "format": Constant.TS,
+        "data": None
+    },
+    "M2_FedReserve": {
+        "refresh": False,
+        "code": "FRED/MYAGM2USM052N",
+        "format": Constant.TS,
+        "data": None
+    },
+    "PREM_GAS_PX_FedReserve": {
+        "refresh": False,
+        "code": "FRED/GASPRMCOVM",
+        "format": Constant.TS,
+        "data": None
+    },
+    "PORTFOLIO_ASSETS_FedReserve": {
+        "refresh": False,
+        "code": "FRED/IEAAPIN",
+        "format": Constant.TS,
+        "data": None
+    },
+    "YLD_CURVE_FedReserve": {
+        "refresh": False,
+        "code": "FED/SVENPY",
+        "format": Constant.TS,
+        "data": None
+    },
+    "TECH_SPEND_FC_FedNY": {
+        "refresh": False,
+        "code": "FRBNY/TSFDINA",
+        "format": Constant.TS,
+        "data": None
+    },
+    "CAPEX_FC_FedNY": {
+        "refresh": False,
+        "code": "FRBNY/CEFDINA",
+        "format": Constant.TS,
+        "data": None
+    },
+    "EMPL_PVT_SVC_ADP": {
+        "refresh": False,
+        "code": "ADP/EMPL_SERVICE_PR",
+        "format": Constant.TS,
+        "data": None
+    },
+    "EMPL_NONFARM_ADP": {
+        "refresh": False,
+        "code": "ADP/EMPL_NONFARM_PRI",
+        "format": Constant.TS,
+        "data": None
+    },
+    "EMPL_GOODS_PROD_ADP": {
+        "refresh": False,
+        "code": "ADP/EMPL_GOODS_PROD",
+        "format": Constant.TS,
+        "data": None
+    },
+    "CAPEX_FC_FedNY": {
+        "refresh": False,
+        "code": "FRBNY/CEFDINA",
+        "format": Constant.TS,
+        "data": None
+    },
+    "QTRLY_GDP_PCT_CHG_Bea": {
+        "refresh": False,
+        "code": "BEA/NIPA_1_1_1_Q",
+        "format": Constant.TS,
+        "data": None
+    }
+}
+
+def get_quandl_data ():
+    for dc in QUANDL_DATA:
+        if not QUANDL_DATA [dc]["refresh"]:
+            continue
+            
+        ### sn: to get a numpy array, use the below. Don't worry about optimizing at this pt.
+        ### quandl.get (QUANDL_DATA [dc] ["code"], returns = "numpy")
+        
+        if QUANDL_DATA [dc]["format"] == Constant.TS:
+            QUANDL_DATA [dc] ["data"] = quandl.get (QUANDL_DATA [dc] ["code"])
+            save_quandl_data_to_file (dc)
+        elif QUANDL_DATA [dc]["format"] == Constant.DT:
+            QUANDL_DATA [dc] ["data"] = quandl.get_table (QUANDL_DATA [dc] ["source"], ticker=QUANDL_DATA [dc] ["ticker"])
+            save_quandl_data_to_file (dc)
+        else:
+            print ("Error - unrecognized format specified in Quandl data source - " + dc)
+            None
+
+def save_quandl_data_to_file (dc):
+    df = QUANDL_DATA [dc] ["data"]
+    if isinstance (df, pd.DataFrame):
+        file_name = Constant.DATA_DIR + "/" + dc + ".csv"
+        print ("Saving dataframe to file " + file_name)
+        df.to_csv (file_name, encoding='utf-8')
+
