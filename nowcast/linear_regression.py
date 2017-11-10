@@ -46,12 +46,14 @@ def featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=1, num_ye
     y = []
     quarters = []
     DAYS_PER_YEAR = 365
+    ##data_pt_count = {}
 
     for idx, row in y_df.iterrows ():
         #quarters.append (convert_yyyymmdd_str_to_qtr(row ['Date']))
         #qtr_end = datetime.datetime.strptime (row ['Date'], fmt)
         qtr_end = row ['Date']
         x = [0] * num_years * int (DAYS_PER_YEAR/num_days_per_period)
+        data_pt_count = [0] * len (x)
         for idx2, row2 in x_df.iterrows ():
             series_row_date = row2 ['Date']
             if (series_row_date <= qtr_end + timedelta (days=-days_to_qtr_end)) and \
@@ -59,12 +61,27 @@ def featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=1, num_ye
                 feature_col_idx = int ((qtr_end - series_row_date).days / num_days_per_period)
                 if feature_col_idx >= len (x):
                     feature_col_idx = len (x) - 1
-                x [feature_col_idx] = row2 ['Total']
+                x [feature_col_idx] += row2 ['Total']
+                data_pt_count [feature_col_idx] += 1
+
+        for idx in range (len (x)):
+            if data_pt_count [idx] == 0:
+                if idx + 1 < len (x) and data_pt_count [idx + 1] > 0:
+                    x [idx] = x [idx + 1] / data_pt_count [idx + 1]
+                else:
+                    import pdb; pdb.set_trace ()
+                    raise ('Data error to be fixed! No data found for qtr ending ' + str (qtr_end) + ' in col ' + str (idx))
+            else:
+                # sn: use quarterly averages
+                x [idx] = x [idx] / data_pt_count [idx]
        
         X.append (x)
         quarters.append (qtr_end)
         y.append (row ['Gross domestic product'])
 
+    import pdb; pdb.set_trace ()
+    # sn: formatted print - keep this
+    # print ('\n'.join ([', '.join ("{0:.1f}".format(d) for d in row) for row in X]))
     return np.array (X), np.array (y)
 
 class LinearRegressionModel (object):
@@ -172,13 +189,13 @@ def main ():
     cut_off_date = datetime.datetime.strptime ('1991-12-01', Constant.DATE_STR_FMT_1)
 
     input_series = {
-        'pce': pce_df,
-        'wti': wti_df,
-        'unempl': unempl_df,
-        'avg30ymtg': avg30ymtg_df,
-        'snp': snp_df,
-        'indiv_conf': indiv_conf_df,
-        'insti_conf': insti_conf_df
+        'pce': pce_df 
+        ,'wti': wti_df
+        ,'unempl': unempl_df
+        ,'avg30ymtg': avg30ymtg_df
+        ,'snp': snp_df
+        #,'indiv_conf': indiv_conf_df
+        #,'insti_conf': insti_conf_df
     }
     label_series = act_gdp_df [act_gdp_df ['Date'] >= cut_off_date]
 
