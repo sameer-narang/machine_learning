@@ -10,6 +10,7 @@ import quandl
 import sklearn
 
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
@@ -41,26 +42,40 @@ def load_data (refresh=False):
 # the function takes as argument the number of days prior to quarter end that we are
 # predicting the GDP growth for
 # x_df and y_df must have the column 'Date' and x_df must also have the column 'Total'
-def featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=1, num_years=2):
+def featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, num_years=2):
     X = []
     y = []
     quarters = []
+    num_mths_to_combine = None
+    if num_days_per_period >= 28 and num_days_per_period <= 31:
+        num_mths_to_combine = 1
+    if num_days_per_period >= 89 and num_days_per_period <= 92:
+        num_mths_to_combine = 3
+    if num_days_per_period >= 181 and num_days_per_period <= 184:
+        num_mths_to_combine = 6
+    if num_days_per_period >= 365 and num_days_per_period <= 366:
+        num_mths_to_combine = 12
+
     DAYS_PER_YEAR = 365
     ##data_pt_count = {}
 
     for idx, row in y_df.iterrows ():
-        #quarters.append (convert_yyyymmdd_str_to_qtr(row ['Date']))
-        #qtr_end = datetime.datetime.strptime (row ['Date'], fmt)
         qtr_end = row ['Date']
-        x = [0] * num_years * int (DAYS_PER_YEAR/num_days_per_period)
-        data_pt_count = [0] * len (x)
+        x = None
+        if not num_mths_to_combine:
+            x = [0] * num_years * int (DAYS_PER_YEAR/num_days_per_period)
+        else:
+            x = [0] * (num_years * int (12 / num_mths_to_combine))
+        data_pt_count = x [:]
         for idx2, row2 in x_df.iterrows ():
             series_row_date = row2 ['Date']
             if (series_row_date <= qtr_end + timedelta (days=-days_to_qtr_end)) and \
-                    (series_row_date > qtr_end + timedelta (days=-2 * num_years * DAYS_PER_YEAR)):
-                feature_col_idx = int ((qtr_end - series_row_date).days / num_days_per_period)
-                if feature_col_idx >= len (x):
-                    feature_col_idx = len (x) - 1
+                    (series_row_date > qtr_end + relativedelta (years=-num_years)):
+                feature_col_idx = int (relativedelta(qtr_end, series_row_date).months / num_mths_to_combine) + \
+                                    int (relativedelta (qtr_end, series_row_date).years * (12 / num_mths_to_combine))
+                #import pdb;pdb.set_trace ()
+                #if feature_col_idx >= len (x):
+                #    feature_col_idx = len (x) - 1
                 x [feature_col_idx] += row2 ['Total']
                 data_pt_count [feature_col_idx] += 1
 
@@ -103,13 +118,13 @@ class LinearRegressionModel (object):
         fs = None
         y = None
         for series_name, series_data in input_series.items ():
-            fname = 'featurized_series/' + series_name + '.csv'
+            fname = 'featurized_series/' + series_name + '.txt'
             if os.path.isfile (fname):
                 #fs = np.array (pd.read_csv (fname) ['Total'])
-                fs = np.loadtxt (fname)
+                fs = np.loadtxt (fname, delimiter='\n')
             else:
                 fs, y = featurize_series (self._days_in_advance, series_data, label_series, self._num_days_per_period)
-                np.savetxt (fname, fs)
+                np.savetxt (fname, fs, delimiter='\n')
          
             self._series_info.append ({'name': series_name})
             if self._use_scaling:
@@ -125,6 +140,7 @@ class LinearRegressionModel (object):
 
             if self._y is None:
                 self._y = y
+                np.savetxt ('featurized_series/gdp_growth.txt', y, delimiter='\n')
 
         # sn: keeping validation and test data sizes at 10% each due to small data size
         X_train_and_val, self._X_test, y_train_and_val, self._y_test = \
@@ -179,10 +195,7 @@ def main ():
     indiv_conf_df ['Date'] = indiv_conf_df ['Date'].apply (datetime.datetime.strptime, args=(Constant.DATE_STR_FMT_1,))
     insti_conf_df ['Date'] = insti_conf_df ['Date'].apply (datetime.datetime.strptime, args=(Constant.DATE_STR_FMT_1,))
     
-    pce_df ['Total'] = pce_df ['Personal consumption expenditures (PCE)'] + pce_df ['Goods'] + \
-                       pce_df [':Durable goods'] + pce_df [':Nondurable goods'] + pce_df ['Services'] + \
-                       pce_df ['PCE excluding food and energy (Addenda)'] + pce_df ['Food (Addenda)'] + \
-                       pce_df ['Energy goods and services (Addenda)']
+    pce_df ['Total'] = pce_df ['Personal consumption expenditures (PCE)'] 
     wti_df ['Total'] = wti_df ['Value']
     unempl_df ['Total'] = unempl_df ['Value']
     avg30ymtg_df ['Total'] = avg30ymtg_df ['Value']
@@ -217,49 +230,5 @@ def main ():
     y = None
 
 
-    '''
-    X1, y1 = featurize_series (0, pce_df, \
-        act_gdp_df [act_gdp_df ['Date'] >= cut_off_date], num_days_per_period=91)
-    X2, y2 = featurize_series (0, wti_df, \
-        act_gdp_df [act_gdp_df ['Date'] >= cut_off_date], num_days_per_period=91)
-    X3, y3 = featurize_series (0, unempl_df, \
-        act_gdp_df [act_gdp_df ['Date'] >= cut_off_date], num_days_per_period=91)
-    X4, y4 = featurize_series (0, avg30ymtg_df, \
-        act_gdp_df [act_gdp_df ['Date'] >= cut_off_date], num_days_per_period=91)
-    X5, y5 = featurize_series (0, snp_df, \
-        act_gdp_df [act_gdp_df ['Date'] >= cut_off_date], num_days_per_period=91)
-    X6, y6 = featurize_series (0, indiv_conf_df, \
-        act_gdp_df [act_gdp_df ['Date'] >= cut_off_date], num_days_per_period=91)
-    X7, y7 = featurize_series (0, insti_conf_df, \
-        act_gdp_df [act_gdp_df ['Date'] >= cut_off_date], num_days_per_period=91)
-
-    scale_data = False
-    
-    if scale_data:
-        min_y, ptp_y, scaled_y1 = normalize_series (y1)
-        min_X1, ptp_X1, scaled_X1 = normalize_series (X1)
-        min_X2, ptp_X2, scaled_X2 = normalize_series (X2)
-
-        X = np.concatenate ((scaled_X1, scaled_X2), axis=1)
-        y = scaled_y1
-    else:
-        X = np.concatenate ((X1, X2), axis=1)
-        y = y1
-
-    X_train, X_test, y_train, y_test = train_test_split (X, y, test_size=0.2, random_state=2)
-
-
-    regr = LinearRegression ()
-    regr.fit (X_train, y_train)
-    y_preds = regr.predict (X_test)
-
-    print ("Predictions vs actual values:\n")
-    print (["{0:.1f}".format(y_pred) for y_pred in y_preds])
-    print ("-----------------------------------------------------------")
-    print (["{0:.1f}".format(y_act) for y_act in y_test])
-    print ("-----------------------------------------------------------")
-    print ("MSE: " + str (((y_preds - y_test) ** 2).mean (axis=None)))
-    '''
-    
 if __name__ == "__main__":
     main()
