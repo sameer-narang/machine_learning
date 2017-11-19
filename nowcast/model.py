@@ -117,14 +117,22 @@ class LinearRegressionModel (object):
     def prepare_series (self, input_series, label_series):
         fs = None
         y = None
+
+        label_fname = 'featurized_series/gdp_growth.txt'
+        if os.path.isfile (label_fname):
+            self._y = np.loadtxt (label_fname)
+
         for series_name, series_data in input_series.items ():
             fname = 'featurized_series/' + series_name + '.txt'
             if os.path.isfile (fname):
                 #fs = np.array (pd.read_csv (fname) ['Total'])
-                fs = np.loadtxt (fname, delimiter='\n')
+                fs = np.loadtxt (fname)
             else:
-                fs, y = featurize_series (self._days_in_advance, series_data, label_series, self._num_days_per_period)
-                np.savetxt (fname, fs, delimiter='\n')
+                if series_name == 'gdp':
+                    fs, y = featurize_series (1, series_data, label_series, self._num_days_per_period)
+                else:
+                    fs, y = featurize_series (self._days_in_advance, series_data, label_series, self._num_days_per_period)
+                np.savetxt (fname, fs)
          
             self._series_info.append ({'name': series_name})
             if self._use_scaling:
@@ -138,9 +146,13 @@ class LinearRegressionModel (object):
             else:
                 self._X = fs
 
-            if self._y is None:
+            if self._y is None and y is not None:
                 self._y = y
-                np.savetxt ('featurized_series/gdp_growth.txt', y, delimiter='\n')
+                if not os.path.isfile (label_fname):
+                    np.savetxt (label_fname, y)
+
+        if self._X is not None:
+            self._X = np.concatenate ((self._X, np.ones ((self._X.shape [0], 1))), axis=1)
 
         # sn: keeping validation and test data sizes at 10% each due to small data size
         X_train_and_val, self._X_test, y_train_and_val, self._y_test = \
@@ -202,7 +214,9 @@ def main ():
     snp_df ['Total'] = snp_df ['S&P Composite']
     indiv_conf_df ['Total'] = indiv_conf_df ['Index Value']
     insti_conf_df ['Total'] = insti_conf_df ['Index Value']
+
     act_gdp_df ['Date'] = act_gdp_df ['Date'].apply (datetime.datetime.strptime, args=(Constant.DATE_STR_FMT_1,))
+    act_gdp_df ['Total'] = act_gdp_df ['Gross domestic product']
 
     # sn: this will be n years after the availability of the latest beginning of any used series
     # currently 2 years after availability of first stock market confidence measures
@@ -214,6 +228,7 @@ def main ():
         ,'unempl': unempl_df
         ,'avg30ymtg': avg30ymtg_df
         ,'snp': snp_df
+        ,'gdp': act_gdp_df
         #,'indiv_conf': indiv_conf_df
         #,'insti_conf': insti_conf_df
     }
