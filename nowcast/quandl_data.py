@@ -98,12 +98,35 @@ QUANDL_DATA = {
         "oldest": "1989-10-31",
         "latest": "2017-09-30"
     },
+    # since 1985, latest: 2017-11-17
+    "ECO_UNCERTAINTY_FedReserve": {
+        "refresh": True,
+        "code": "FRED/USEPUINDXD",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1985-01-01",
+        "latest": "2017-11-17"
+    },
+    # since 1949, latest: 2017-10-01
+    "LONG_TERM_UNEMPL_FedReserve": {
+        "refresh": True,
+        "code": "FRED/NROU",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1949-01-01",
+        "latest": "2017-10-01"
+    },
 }
 
-def get_quandl_data ():
+def get_quandl_data (code=None):
     for dc in QUANDL_DATA:
-        if not QUANDL_DATA [dc]["refresh"]:
+        if code is None:
+            if not QUANDL_DATA [dc]["refresh"]:
+                continue
+        elif dc not in code:
             continue
+        else:
+            None
             
         ### sn: to get a numpy array, use the below. Don't worry about optimizing at this pt.
         ### quandl.get (QUANDL_DATA [dc] ["code"], returns = "numpy")
