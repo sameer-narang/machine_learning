@@ -116,6 +116,102 @@ QUANDL_DATA = {
         "oldest": "1949-01-01",
         "latest": "2017-10-01"
     },
+    "FIXED_CAP_CONS_Bea": {
+        "refresh": True,
+        "code": "BEA/T70500_Q",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1947-03-31",
+        "latest": "2017-09-30"
+    },
+    "TEXTILE_INVENTORIES_FedReserve": {
+        "refresh": True,
+        "code": "FRED/U14STI",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1992-01-01",
+        "latest": "2017-09-01"
+    },
+    "DURABLE_INVENTORIES_FedReserve": {
+        "refresh": True,
+        "code": "FRED/AODGTI",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1992-01-01",
+        "latest": "2017-10-01"
+    },
+    "DURABLE_SHIPMENTS_FedReserve": {
+        "refresh": True,
+        "code": "FRED/UODGVS",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1992-01-01",
+        "latest": "2017-10-01"
+    },
+    "TEXTILE_SHIPMENTS_FedReserve": {
+        "refresh": True,
+        "code": "FRED/U14SVS",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1992-01-01",
+        "latest": "2017-09-01"
+    }
+    ,"RES_BLDG_PERMITS_FedReserve": {
+        "refresh": True,
+        "code": "FRED/PERMITNSA",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1959-01-01",
+        "latest": "2017-10-01"
+    }
+    ,"NE_HOUSING_STARTS_FedReserve": {
+        "refresh": True,
+        "code": "FRED/HOUST2UMNEQ",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1985-01-01",
+        "latest": "2017-07-01"
+    }
+    ,"SOUTH_HOUSING_STARTS_FedReserve": {
+        "refresh": True,
+        "code": "FRED/HOUST2UMSQ",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1985-01-01",
+        "latest": "2017-07-01"
+    }
+    ,"WEST_HOUSING_STARTS_FedReserve": {
+        "refresh": True,
+        "code": "FRED/HOUST2UMWQ",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1985-01-01",
+        "latest": "2017-07-01"
+    }
+    ,"CPCTY_UTIL_FedReserve": {
+        "refresh": True,
+        "code": "FRED/TCU",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1967-01-01",
+        "latest": "2017-10-01"
+    }
+    ,"IND_PROD_FedEco": {
+        "refresh": True,
+        "code": "FED/IP_B50001_N",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1919-01-31",
+        "latest": "2017-10-31"
+    }
+    ,"GEN_BIZ_NY_FederalReserve": {
+        "refresh": True,
+        "code": "FRED/GACNNA156MNFRBNY",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1919-01-31",
+        "latest": "2017-10-31"
+    }
 }
 
 def get_quandl_data (code=None):
