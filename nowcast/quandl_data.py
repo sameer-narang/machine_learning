@@ -212,6 +212,38 @@ QUANDL_DATA = {
         "oldest": "1919-01-31",
         "latest": "2017-10-31"
     }
+    ,"RETAIL_SALES_FederalReserve": {
+        "refresh": True,
+        "code": "FRED/RSAFSNA",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1992-01-01",
+        "latest": "2017-10-01"
+    }
+    ,"PPI_ALL_COMMODITIES_FederalReserve": {
+        "refresh": True,
+        "code": "FRED/PPIACO",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1913-01-01",
+        "latest": "2017-10-01"
+    }
+    ,"JOB_OPENINGS_FederalReserve": {
+        "refresh": True,
+        "code": "FRED/JTSJOL",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "2012-12-01",
+        "latest": "2017-09-01"
+    }
+    ,"NMI_ISM": {
+        "refresh": True,
+        "code": "ISM/NONMAN_NMI",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "2008-01-01",
+        "latest": "2017-10-01"
+    }
 }
 
 def get_quandl_data (code=None):
