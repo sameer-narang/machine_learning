@@ -91,11 +91,12 @@ def rf_featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, nu
             if not np.isnan (period_mean):
                 x [period_idx] = tmp_df [feat_col].mean ()
         
-        #tmp_sum = sum (x [4:])
-        #if tmp_sum != 0:
-        #    x.append (sum (x [:4]) / tmp_sum)      
-        #else:
-        #    x.append (fill_na_with)
+        base = sum (x [1:])
+        numer = sum (x [:1])
+        if base != 0 and base != fill_na_with and numer != fill_na_with:
+            x.append (numer / base)      
+        else:
+            x.append (fill_na_with)
 
         X.append (x)
         quarters.append (qtr_end)
@@ -263,7 +264,7 @@ def main ():
 
         input_series [ds_name] = df
 
-    rf = Model (num_days_per_period=91, days_in_advance=0, use_scaling=False, seed=RNDM_SEED_1)
+    rf = Model (num_days_per_period=365, days_in_advance=0, use_scaling=False, seed=RNDM_SEED_1)
     rf.prepare_series (input_series, label_series)
     rf.fit_and_summarize_random_forest_model ()
     rf.print_test_data_performance ()

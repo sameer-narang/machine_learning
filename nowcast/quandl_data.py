@@ -13,11 +13,11 @@ QUANDL_DATA = {
     # since 1969, latest: 2017-08-31
     "PCE_Bea": {
         "refresh": True,
-        "code": "BEA/NIPA_2_8_5_M",
+        "code": "BEA/T20805_M",
         "format": Constant.TS,
         "data": None,
-        "oldest": "1969-01-31",
-        "latest": "2017-08-31"
+        "oldest": "1959-01-31",
+        "latest": "2017-09-30"
     },
     "WTI_DeptOfEnergy": {
         "refresh": True,
@@ -47,11 +47,10 @@ QUANDL_DATA = {
     # since 1969, latest: 2017-06-30
     "QTRLY_GDP_PCT_CHG_Bea": {
         "refresh": True,
-        #"code": "BEA/NIPA_1_1_1_Q",
-        "code": "BEA/T10105_Q",
+        "code": "BEA/T10107_Q",
         "format": Constant.TS,
         "data": None,
-        "oldest": "1969-03-31",
+        "oldest": "1947-06-30",
         "latest": "2017-09-30"
     },
     # since 1971, latest: 2017-10-26
@@ -284,6 +283,8 @@ def get_quandl_data (code=None):
         ### sn: to get a numpy array, use the below. Don't worry about optimizing at this pt.
         ### quandl.get (QUANDL_DATA [dc] ["code"], returns = "numpy")
         
+        print ("Fetching data using the code: " + dc)
+
         if QUANDL_DATA [dc]["format"] == Constant.TS:
             QUANDL_DATA [dc] ["data"] = quandl.get (QUANDL_DATA [dc] ["code"])
             save_quandl_data_to_file (dc)
