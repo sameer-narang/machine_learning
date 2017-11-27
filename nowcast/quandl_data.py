@@ -47,11 +47,12 @@ QUANDL_DATA = {
     # since 1969, latest: 2017-06-30
     "QTRLY_GDP_PCT_CHG_Bea": {
         "refresh": True,
-        "code": "BEA/NIPA_1_1_1_Q",
+        #"code": "BEA/NIPA_1_1_1_Q",
+        "code": "BEA/T10105_Q",
         "format": Constant.TS,
         "data": None,
         "oldest": "1969-03-31",
-        "latest": "2017-06-30"
+        "latest": "2017-09-30"
     },
     # since 1971, latest: 2017-10-26
     "AVG_30Y_MTGG_FreddieMac": {
@@ -243,6 +244,30 @@ QUANDL_DATA = {
         "data": None,
         "oldest": "2008-01-01",
         "latest": "2017-10-01"
+    }
+    ,"TTL_INVENTORIES_FederalReserve": {
+        "refresh": True,
+        "code": "FRED/UMTMTI",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1992-01-01",
+        "latest": "2017-09-01"
+    }
+    ,"IMPORTS_GOODS_N_SERVICES_FederalReserve": {
+        "refresh": True,
+        "code": "FRED/IEAMGSN",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1999-01-01",
+        "latest": "2017-04-01"
+    }
+    ,"EXPORTS_GOODS_N_SERVICES_FederalReserve": {
+        "refresh": True,
+        "code": "FRED/EXPGS",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1947-01-01",
+        "latest": "2017-07-01"
     }
 }
 

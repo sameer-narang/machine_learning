@@ -93,7 +93,7 @@ def rf_featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, nu
         
         #tmp_sum = sum (x [4:])
         #if tmp_sum != 0:
-        #    x.append (sum (x [:3]) / tmp_sum)      
+        #    x.append (sum (x [:4]) / tmp_sum)      
         #else:
         #    x.append (fill_na_with)
 
