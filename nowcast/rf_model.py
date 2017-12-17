@@ -16,6 +16,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
+from sklearn.preprocessing import Imputer
 
 import util
 import quandl_data
@@ -32,6 +33,9 @@ RNDM_SEED_1 = 7
 
 def load_data (refresh=False):
     global y_hat_frbny
+
+    add_new_datasets (QUANDL_DATA)
+
     if refresh:
         get_quandl_data ()
     else:
@@ -55,6 +59,8 @@ def get_last_day_of_month (dt):
 # predicting the GDP growth for
 # x_df and y_df must have the column 'Date' and x_df must also have the column feat_col
 def rf_featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, num_years=2, fill_na_with=0, feat_col='Value'):
+    if feat_col not in x_df:
+        raise Exception ('no column selected to featurize!' + str (list (x_df)))
     X = []
     y = []
     quarters = []
@@ -91,8 +97,19 @@ def rf_featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, nu
             if not np.isnan (period_mean):
                 x [period_idx] = tmp_df [feat_col].mean ()
         
-        base = sum (x [1:])
-        numer = sum (x [:1])
+        base = None
+        numer = None
+        if num_mths_to_combine == 12:
+            base = sum (x [1:])
+            numer = sum (x [:1])
+        if num_mths_to_combine == 6:
+            base = sum (x [2:])
+            numer = sum (x [:2])
+        if num_mths_to_combine == 3:
+            base = sum (x [:4])
+            x.append (base)
+            numer = sum (x [4:])
+            x.append (numer)
         if base != 0 and base != fill_na_with and numer != fill_na_with:
             x.append (numer / base)      
         else:
@@ -110,10 +127,9 @@ def rf_featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, nu
 
 class Model (object):
     # sn: default is quarterly bucketing of data series to reduce noise that more frequent data usually has
-    def __init__ (self, num_days_per_period=91, days_in_advance=0, use_scaling=False, seed=2):
+    def __init__ (self, num_days_per_period=91, days_in_advance=0, seed=2):
         self._num_days_per_period = num_days_per_period
         self._days_in_advance = days_in_advance
-        self._use_scaling = use_scaling
         self._seed = seed
 
         self._X = None
@@ -148,11 +164,6 @@ class Model (object):
                 np.savetxt (fname, fs)
          
             self._series_info.append ({'name': series_name})
-            if self._use_scaling:
-                self._series_info [-1] ['min_X'], self._series_info [-1] ['ptp_X'], fs \
-                    = normalize_series (fs)
-                self._series_info [-1] ['min_y'], self._series_info [-1] ['ptp_y'], y \
-                    = normalize_series (y)
 
             if self._X is not None:
                 self._X = np.concatenate ((self._X, fs), axis=1)
@@ -185,25 +196,17 @@ class Model (object):
         print ("MAD: " + str ((abs(y_preds - y_acts)).mean (axis=None)))
 
 
-    def fit_and_summarize_ridge_model (self, lambda_val, use_scaling=None):
-        if not use_scaling:
-            use_scaling = self._use_scaling
+    def fit_and_summarize_ridge_model (self, lambda_val):
         self._model = Ridge (alpha=lambda_val, random_state=self._seed, fit_intercept=True, normalize=True)
         y_preds = None
-        if use_scaling:
-            self._scaler = sklearn.preprocessing.StandardScaler ()
-            scaled_X_train = self._scaler.fit_transform (self._X_train)
-            self._model.fit (scaled_X_train, self._y_train)
-            y_preds = self._model.predict (self._scaler.transform (self._X_val))
-        else:
-            self._model.fit (self._X_train, self._y_train)
-            y_preds = self._model.predict (self._X_val)
+        self._model.fit (self._X_train, self._y_train)
+        y_preds = self._model.predict (self._X_val)
 
         self.print_summary (y_preds, self._y_val)
 
 
     def fit_and_summarize_random_forest_model (self):
-        self._model = RandomForestRegressor ()
+        self._model = RandomForestRegressor (n_estimators=1000, max_features=200)
         y_preds = None
         self._model.fit (self._X_train, self._y_train)
 
@@ -242,6 +245,8 @@ def main ():
         elif ds_name == "LONG_TERM_UNEMPL_FedReserve":
             df ['Date'] = df ['Date'].apply (datetime.datetime.strptime, args=(Constant.DATE_STR_FMT_1,))
             df ['Date'] = df ['Date'].apply (lambda x: x + relativedelta (years=-10))
+        elif ds_name == "CHRIS_CBOE_VX1":
+            df ['Date'] = df ['Trade Date'].apply (datetime.datetime.strptime, args=(Constant.DATE_STR_FMT_1,))
         else:
             df ['Date'] = df ['Date'].apply (datetime.datetime.strptime, args=(Constant.DATE_STR_FMT_1,))
 
@@ -261,10 +266,12 @@ def main ():
             label_series = df [df ['Date'] >= cut_off_date]
         elif ds_name == "NMI_ISM":
             df ['Value'] = df ['Index']
+        elif ds_name == "CHRIS_CBOE_VX1":
+            df ['Value'] = df ['Close']
 
         input_series [ds_name] = df
 
-    rf = Model (num_days_per_period=365, days_in_advance=0, use_scaling=False, seed=RNDM_SEED_1)
+    rf = Model (num_days_per_period=365, days_in_advance=0, seed=RNDM_SEED_1)
     rf.prepare_series (input_series, label_series)
     rf.fit_and_summarize_random_forest_model ()
     rf.print_test_data_performance ()

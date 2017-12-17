@@ -9,6 +9,75 @@ from util import *
 
 quandl.ApiConfig.api_key = "8DrzzNxwBzDzh_1jE6Dj"
 
+'''
+QUANDL_DATA = {
+    "WTI_DeptOfEnergy": {
+        "refresh": True,
+        "code": "EIA/PET_RWTC_D",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1986-01-02",
+        "latest": "2017-10-23"
+    },
+}
+'''
+
+def add_new_datasets (QUANDL_DATA):
+    '''
+    quandl_codes = [
+        'CHRIS/CBOE_VX1'
+    ]
+
+    '''
+    quandl_codes = [
+                    'FED/FR515035023_Q',
+                    'FED/FR515035023_Q',
+                    'FED/B1027NFRDM',
+                    'FED/B1027NCBAM',
+                    'FED/B1027NCBDM',
+                    'FED/B1027NFRAM',
+                    'FED/FU643065105_Q',
+                    'FED/RIW_N321991_S',
+                    'FED/IP_N321991_S_Q',
+                    'FED/FR643065173_Q',
+                    'FED/FL643065105_Q',
+                    'FED/FL515035023_Q',
+                    'FED/IP_N321991_S',
+                    'FED/FU515035023_Q',
+                    'FED/IP_N321991_N_Q',
+                    'FED/FR643065183_Q',
+                    'FED/FA643065105_Q',
+                    'FED/FA515035023_Q',
+                    'FED/IP_N321991_N',
+                    'FED/B1027NFRD',
+                    'FED/B1027NDMDM',
+                    'FED/B1027NCBA',
+                    'FED/B1027NCBD',
+                    'FED/B1027NFRA',
+                    'FED/B1027NDMAM',
+                    'FED/FU106110405_Q',
+                    'FED/FA106110405_Q',
+                    'FED/FU106006065_Q',
+                    'FED/FA546006063_Q',
+                    'FED/FA893092275_Q',
+                    'FED/FU893092275_Q',
+                    'FED/FU546006063_Q',
+                    'FED/FU106110115_Q',
+                    'FED/FU586006065_Q',
+                    'FED/FA106110115_Q',
+                    'FED/RESPPLLOP_N_WW',
+                    'FED/FA666006305_Q',
+                    'FED/FA546000105_Q',
+                    'CHRIS/CBOE_VX1'
+                   ]
+    for code in quandl_codes:
+        QUANDL_DATA [code.replace ('/', '_')] = {
+            "refresh": True,
+            "code": code,
+            "format": Constant.TS,
+            "data" : None
+        }
+
 QUANDL_DATA = {
     # since 1969, latest: 2017-08-31
     "PCE_Bea": {
@@ -52,9 +121,9 @@ QUANDL_DATA = {
         "data": None,
         "oldest": "1947-06-30",
         "latest": "2017-09-30"
-    },
+    }
     # since 1971, latest: 2017-10-26
-    "AVG_30Y_MTGG_FreddieMac": {
+    ,"AVG_30Y_MTGG_FreddieMac": {
         "refresh": True,
         "code": "FMAC/30US",
         "format": Constant.TS,
@@ -267,6 +336,12 @@ QUANDL_DATA = {
         "data": None,
         "oldest": "1947-01-01",
         "latest": "2017-07-01"
+    }
+    ,"NON_FINANCIAL_CORP_INVENTORIES_FedEco": {
+        "refresh": True,
+        "code": "FED/FU145020005_Q",
+        "format": Constant.TS,
+        "data": None
     }
 }
 
