@@ -10,6 +10,20 @@ from util import *
 quandl.ApiConfig.api_key = "8DrzzNxwBzDzh_1jE6Dj"
 
 '''
+QUANDL_DATA = {}
+
+
+QUANDL_DATA = {
+    "QTRLY_GDP_PCT_CHG_Bea": {
+        "refresh": True,
+        "code": "BEA/T10107_Q",
+        "format": Constant.TS,
+        "data": None,
+        "oldest": "1947-06-30",
+        "latest": "2017-09-30"
+    }
+}
+
 QUANDL_DATA = {
     "WTI_DeptOfEnergy": {
         "refresh": True,
@@ -23,12 +37,10 @@ QUANDL_DATA = {
 '''
 
 def add_new_datasets (QUANDL_DATA):
-    '''
     quandl_codes = [
-        'CHRIS/CBOE_VX1'
+        'VIXCLS'
     ]
 
-    '''
     quandl_codes = [
                     'FED/FR515035023_Q',
                     'FED/FR515035023_Q',
@@ -77,6 +89,7 @@ def add_new_datasets (QUANDL_DATA):
             "format": Constant.TS,
             "data" : None
         }
+
 
 QUANDL_DATA = {
     # since 1969, latest: 2017-08-31
@@ -344,6 +357,7 @@ QUANDL_DATA = {
         "data": None
     }
 }
+
 
 def get_quandl_data (code=None):
     for dc in QUANDL_DATA:

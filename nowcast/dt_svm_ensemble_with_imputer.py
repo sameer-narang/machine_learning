@@ -12,6 +12,7 @@ import sklearn
 
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
+from sklearn import tree
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV 
@@ -30,10 +31,12 @@ from quandl_data import *
 y_hat_frbny = None
 
 RNDM_SEED_1 = 1
-RNDM_SEED_2 = 51
+RNDM_SEED_2 = 11
 TEST_SIZE = 0.10
 MAX_TREE_DEPTH=5
-MIN_LEAF_NODES=10
+MIN_LEAF_NODES=2
+
+NA_FILL_VAL=-1e9
 
 def load_data (refresh=False):
     global y_hat_frbny
@@ -88,8 +91,6 @@ def rf_featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, nu
 
     for idx, row in y_df.iterrows ():
         qtr_end = row ['Date']
-        #if qtr_end == datetime.datetime (2017,6,30):
-        #    import pdb; pdb.set_trace ()
         x = [np.nan] * num_periods_per_series
 
         for period_idx in range (0, len (x)):
@@ -111,10 +112,12 @@ def rf_featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, nu
         if num_mths_to_combine == 6:
             base = np.mean (x [2:])
             numer = np.mean (x [:2])
+            x.append (base)
+            x.append (numer)
         if num_mths_to_combine == 3:
             base = np.nanmean (x [:4])
-            x.append (base)
             numer = np.nanmean (x [4:])
+            x.append (base)
             x.append (numer)
         if base != 0 and np.isfinite (base) and np.isfinite (numer):
             x.append (numer / base)      
@@ -125,7 +128,6 @@ def rf_featurize_series (days_to_qtr_end, x_df, y_df, num_days_per_period=91, nu
         quarters.append (qtr_end)
         y.append (row ['Gross domestic product'])
 
-    # import pdb; pdb.set_trace ()
     # sn: formatted print - keep this
     # print ('\n'.join ([', '.join ("{0:.1f}".format(d) for d in row) for row in X]))
     return np.array (X), np.array (y)
@@ -161,6 +163,8 @@ class Model (object):
         self._X_train, self._X_val, self._y_train, self._y_val = \
             train_test_split (self._X_train_and_val, self._y_train_and_val, test_size=TEST_SIZE, random_state=self._seed)
 
+        self._inv_errors = []
+
         for series_name, series_data in input_series.items ():
             fname = 'featurized_series/' + series_name + '.txt'
             if os.path.isfile (fname):
@@ -174,8 +178,11 @@ class Model (object):
                     fs, y = rf_featurize_series (self._days_in_advance, series_data, label_series, \
                                 self._num_days_per_period)
                 
-                imputer = Imputer ()
-                fs = imputer.fit_transform (fs)
+                if NA_FILL_VAL:
+                    fs [np.isnan (fs)] = NA_FILL_VAL
+                else:
+                    imputer = Imputer ()
+                    fs = imputer.fit_transform (fs)
                 np.savetxt (fname, fs)
          
             self._series_info.append ({'name': series_name})
@@ -187,12 +194,36 @@ class Model (object):
                 train_test_split (dt_x_train_and_val, dt_y_train_and_val, test_size=TEST_SIZE, random_state=self._seed)
 
             dt_model = DecisionTreeRegressor (max_depth=MAX_TREE_DEPTH, random_state=RNDM_SEED_2, presort=True, \
-                        max_features="log2", min_samples_split=MIN_LEAF_NODES)
+                        max_features="sqrt", max_leaf_nodes=5)
             dt_model.fit (dt_x_train, dt_y_train)
                 
-            self._X_train = np.concatenate ((self._X_train, dt_model.predict (dt_x_train).reshape (-1,1)), axis=1)
-            self._X_val = np.concatenate ((self._X_val, dt_model.predict (dt_x_val).reshape (-1,1)), axis=1)
-            self._X_test = np.concatenate ((self._X_test, dt_model.predict (dt_x_test).reshape (-1,1)), axis=1)
+            dt_train_prediction = dt_model.predict (dt_x_train).reshape (-1,1)
+            dt_val_prediction = dt_model.predict (dt_x_val).reshape (-1,1)
+            dt_test_prediction = dt_model.predict (dt_x_test).reshape (-1,1)
+
+            avg_error = 1/ np.mean (np.absolute (np.subtract (self._y_val, dt_val_prediction))) 
+            self._inv_errors.append (avg_error)
+
+            '''
+            print ("--- Training data ---")
+            for idx in range (0, dt_x_train.shape [0]):
+                print (", ".join ([ str (round (x,2)) for x in dt_x_train [idx]]) + " --> " + str (round (dt_train_prediction [idx][0],2)) + \
+                    " against "  + str (self._y_train [idx]))
+            print ("--- Validation data ---")
+            for idx in range (0, dt_x_val.shape [0]):
+                print (", ".join ([str (round (x,2)) for x in dt_x_val [idx]]) + " --> " + str (round (dt_val_prediction[idx][0],2)) + \
+                    " against "  + str (self._y_val [idx])) 
+            print ("--- Training data ---")
+            for idx in range (0, dt_x_test.shape [0]):
+                print (", ".join ([str (round (x,2)) for x in dt_x_test [idx]]) + " --> " + str (round (dt_test_prediction[idx][0],2)) + \
+                    " against "  + str (self._y_test [idx]))
+            '''
+
+            tree.export_graphviz (dt_model, out_file='tree_plots/'+series_name+'.dot')
+
+            self._X_train = np.concatenate ((self._X_train, dt_train_prediction), axis=1)
+            self._X_val = np.concatenate ((self._X_val, dt_val_prediction), axis=1)
+            self._X_test = np.concatenate ((self._X_test, dt_test_prediction), axis=1)
             
 
     def print_summary (self, y_preds, y_acts):
@@ -206,12 +237,32 @@ class Model (object):
         print ("MAD: " + str ((abs(y_preds - y_acts)).mean (axis=None)))
 
 
+    def fit_and_summarize_wtd_avg_model (self):
+        self._X_val = np.delete (self._X_val, 0, axis=1)
+        self._weights = self._inv_errors / np.sum (self._inv_errors)
+        weighted_predictions = np.dot (self._X_val, self._weights)
+        #for r in self._X_val:
+        #    weighted_predictions.append (self._weights * r)
+        self.print_summary (weighted_predictions, self._y_val)
+
+    def print_wtd_avg_model_test_perf (self):
+        self._X_test = np.delete (self._X_test, 0, axis=1)
+        y_preds = np.dot (self._X_test, self._weights)
+        self.print_summary (y_preds, self._y_test)
+
     def fit_and_summarize_svr_model (self):
-        C_range = np.logspace(-3, , 13)
-        gamma_range = np.logspace(-10, 10, 13)
-        epsilon_range = 
-        param_grid = dict (gamma=gamma_range, C=C_range)
-        self._model = GridSearchCV (SVR (kernel='rbf', epsilon=0.2), param_grid=param_grid)
+        '''
+        #C_range = np.logspace(-1, 2, 20)
+        gamma_range = np.logspace(-5, 1, 20)
+        C_range = np.arange (0.1, 100, 5)
+        #gamma_range = np.arange ()
+        epsilon_range = np.arange (0,0.30,0.05)
+        param_grid = dict (gamma=gamma_range, C=C_range, epsilon=epsilon_range)
+        self._model = GridSearchCV (SVR (kernel='rbf'), param_grid=param_grid)
+        '''
+        degree_range = np.arange (1, 10, 1)
+        param_grid = dict (degree=degree_range)
+        self._model = GridSearchCV (SVR (kernel='poly'), param_grid=param_grid)
         y_preds = None
         self._model.fit (self._X_train, self._y_train)
         print("The best parameters are %s with a score of %0.2f"% (self._model.best_params_, self._model.best_score_))
@@ -289,6 +340,8 @@ def main ():
     #lambda_vals = [1, 3, 5, 7, 9]
     #for lbda in lambda_vals:
     #print ("...................... lambda = " + str (lbda) + "......................")
+    ##rf.fit_and_summarize_wtd_avg_model ()
+    ##rf.print_wtd_avg_model_test_perf ()
     rf.fit_and_summarize_svr_model ()
     rf.print_test_data_performance ()
 

@@ -206,7 +206,7 @@ class Model (object):
 
 
     def fit_and_summarize_random_forest_model (self):
-        self._model = RandomForestRegressor (n_estimators=1000, max_features=200)
+        self._model = RandomForestRegressor (n_estimators=1000, max_leaf_nodes=5)
         y_preds = None
         self._model.fit (self._X_train, self._y_train)
 
