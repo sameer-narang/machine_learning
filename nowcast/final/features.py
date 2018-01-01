@@ -70,6 +70,7 @@ def add_standard_columns (data):
         elif ds_name == "BEA_T10107_Q":
             df ['Value'] = df ['Gross domestic product']
             label_series = df [df ['Date'] >= cut_off_date]
+            label_series = label_series [['Date', 'Gross domestic product']]
         elif ds_name == "ISM_NONMAN_NMI":
             df ['Value'] = df ['Index']
         elif ds_name == "CHRIS_CBOE_VX1":
@@ -92,7 +93,7 @@ def validate_input_data (data):
 
 
 def get_featurized_inputs (input_series, label_series, mths_to_combine=3):
-    features_df = pd.DataFrame ({})
+    features_df = pd.DataFrame (label_series ['Date'].copy ()).reset_index ()
     for series_name, series_data in input_series.items ():
         fname = 'featurized_series/' + series_name + '_' + str (mths_to_combine)  + '.csv'
 
@@ -106,8 +107,13 @@ def get_featurized_inputs (input_series, label_series, mths_to_combine=3):
                 df = featurize_df (series_data, label_series, mths_to_combine=mths_to_combine)
             df.to_csv (fname, index=False)
 
+        col_name_map = {}
+        df = df.drop (['Date'], axis=1)
         for col in df:
-            features_df [series_name + "__" + col] = df [col]
+            if col != 'Date':
+                col_name_map [col] = series_name + "__" + col
+        df = df.rename (col_name_map, axis='columns')
+        features_df = pd.concat ([features_df, df], axis=1)
 
     return features_df
 

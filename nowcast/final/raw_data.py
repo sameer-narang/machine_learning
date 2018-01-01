@@ -14,8 +14,8 @@ manual_csv_codes = ['VIXCLS']
 
 quandl_codes = set (['FED/FR515035023_Q', 'FED/FR515035023_Q', 'FED/B1027NFRDM', 'FED/B1027NCBAM',
                     'FED/B1027NCBDM', 'FED/B1027NFRAM', 'FED/FU643065105_Q', 'FED/RIW_N321991_S',
-                    'FED/IP_N321991_S_Q', 'FED/FR643065173_Q', 'FED/FL643065105_Q', 'FED/FL515035023_Q',
-                    'FED/IP_N321991_S', 'FED/FU515035023_Q', 'FED/IP_N321991_N_Q', 'FED/FR643065183_Q',
+                    'FED/IP_N321991_S_Q', 'FED/FL643065105_Q', 'FED/FL515035023_Q',
+                    'FED/IP_N321991_S', 'FED/FU515035023_Q', 'FED/IP_N321991_N_Q', 
                     'FED/FA643065105_Q', 'FED/FA515035023_Q', 'FED/IP_N321991_N', 'FED/B1027NFRD',
                     'FED/B1027NDMDM', 'FED/B1027NCBA', 'FED/B1027NCBD', 'FED/B1027NFRA',
                     'FED/B1027NDMAM', 'FED/FU106110405_Q', 'FED/FA106110405_Q', 'FED/FU106006065_Q',
@@ -60,7 +60,7 @@ def load_offline_data (RAW_DATA):
             "format": Constant.TS,
             "data" : pd.read_csv (Constant.DATA_DIR + "/" + code + ".csv")
         }
-    print ('Loaded ' + str (len (RAW_DATA)) + ' manual series')
+    print ('Loaded ' + str (len (manual_csv_codes)) + ' offline series')
     return RAW_DATA
 
 
