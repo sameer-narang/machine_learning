@@ -19,6 +19,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import Imputer
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
 from sklearn.tree import DecisionTreeRegressor
 

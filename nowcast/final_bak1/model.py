@@ -55,26 +55,16 @@ class Model (object):
         self._X_scaler = None
 
     def prepare_training_data (self, x_df, y_df, scale=True):
-        X = x_df.drop (columns=['Date'], axis=1).as_matrix ()
-        y = y_df.drop (columns=['Date'], axis=1).as_matrix ()
+        X = np.delete (x_df.drop (columns=['Date'], axis=1).as_matrix (), 0, axis=1)
+        y = np.delete (y_df.drop (columns=['Date'], axis=1).as_matrix (), 0, axis=1)
 
         self._X_train_and_val, self._X_test, self._y_train_and_val, self._y_test = \
             train_test_split (X, y, test_size=TEST_SIZE, random_state=self._seed)
         self._X_train, self._X_val, self._y_train, self._y_val = \
             train_test_split (self._X_train_and_val, self._y_train_and_val, test_size=TEST_SIZE, random_state=self._seed)
 
-        self._X_train = np.delete (self._X_train, 0, axis=1)
-        self._X_train_and_val = np.delete (self._X_train_and_val, 0, axis=1)
-        self._X_val = np.delete (self._X_val, 0, axis=1)
-        self._X_test = np.delete (self._X_test, 0, axis=1)
-
-        self._y_train = np.delete (self._y_train, 0, axis=1)
-        self._y_train_and_val = np.delete (self._y_train_and_val, 0, axis=1)
-        self._y_val = np.delete (self._y_val, 0, axis=1)
-        self._y_test = np.delete (self._y_test, 0, axis=1)
-
         if NA_FILL_VAL is None:
-            fill_nan = Imputer (missing_values=np.nan, strategy='mean', axis=0)
+            fill_nan = Imputer (missing_values=np.nan, strategy='mean', axis=1)
             self._X_train = fill_nan.fit_transform (self._X_train)
             self._X_imputer = fill_nan
             self._X_val = fill_nan.transform (self._X_val)
@@ -101,17 +91,19 @@ class Model (object):
             self.y_train_scaled = self.y_train
         
     
-    def prepare_comparison_data (self, x_df, scale=True):
-        X = np.delete (x_df.drop (columns=['Date', 'y_ny_fed_prediction', 'Gross domestic product'], axis=1).as_matrix (), 0, axis=1)
-        X = np.delete (X, -1, axis=1)
+    def prepare_comparison_data (self, x_df, y_df, scale=True):
+        X = np.delete (x_df.drop (columns=['Date'], axis=1).as_matrix (), 0, axis=1)
+        y = np.delete (y_df.drop (columns=['Date'], axis=1).as_matrix (), 0, axis=1)
+
         eval_df = X
+
         if NA_FILL_VAL is None:
             eval_df = self._X_imputer.transform (eval_df)
         else:
             eval_df = eval_df.fillna (value=NA_FILL_VAL)
             
         if scale:
-            eval_df = self._X_scaler.transform (eval_df)
+            eval_df = self._X_scaler.transform (self._X_test)
 
         return eval_df
     
@@ -152,13 +144,8 @@ class Model (object):
         self._model = GridSearchCV (RandomForestRegressor (n_estimators=500, random_state=RNDM_SEED_2, verbose=0, warm_start=False), \
                         param_grid=param_grid)
         '''
-       
         self._model = RandomForestRegressor (n_estimators=500, random_state=RNDM_SEED_2, verbose=1,warm_start=False, max_leaf_nodes=7, \
                         max_features=1.0, max_depth=2, min_samples_split=7, min_samples_leaf=4, min_impurity_decrease=0)
-     
-        '''
-        self._model = RandomForestRegressor (n_estimators=500, random_state=RNDM_SEED_2, verbose=1)
-        '''
         y_preds = None
         self._model.fit (self._X_train_scaled, np.ravel (self._y_train_scaled))
         y_preds_train = self._y_scaler.inverse_transform (self._model.predict (self._X_train_scaled))
@@ -174,36 +161,20 @@ class Model (object):
         benchmark_df ['Value'] = benchmark_df ['Value'].replace (to_replace='-', value=np.nan) 
         benchmark_df ['Value'] = np.asfarray (benchmark_df ['Value'])
         x_values = None
-        y_ny_fed_predictions = []
-        count = 0
-        # sn: load input vectors
-        if not os.path.isfile ('nowcast_benchmarks/x_values.csv'):
-            for index, row in benchmark_df.iterrows ():
-                if np.isfinite (row ['Value']):
-                    prediction_date = datetime.datetime.strptime (row ['Date'], Constant.DATE_STR_FMT_2)
-                    qtr_end = datetime.datetime.strptime (row ['TargetPeriodDate'], Constant.DATE_STR_FMT_1)
-                    # sn: revisit to see if the logic is good for data released past the quarter end but before the official gdp release
-                    if prediction_date < qtr_end:
-                        days_prior = (qtr_end - prediction_date).days
-                        features_df = get_featurized_inputs (input_series, label_series [label_series ['Date']==qtr_end], days_prior=days_prior)
-                        features_df ['y_ny_fed_prediction'] = row ['Value']
-                        label_df = label_series [label_series ['Date']==qtr_end] ['Gross domestic product'].copy ().reset_index ()
-                        features_df = pd.concat ([features_df, label_df], axis=1)
-                        if x_values is None:
-                            x_values = features_df
-                        else:
-                            x_values = pd.concat ([x_values, features_df], axis=0)
-                        count += 1
-            x_values.to_csv ('nowcast_benchmarks/x_values.csv', index=False)
-        else:
-            x_values = pd.read_csv ('nowcast_benchmarks/x_values.csv')
-
-        y_ny_fed_predictions = x_values ['y_ny_fed_prediction']
-        y_actuals = x_values ['Gross domestic product']
-        x_eval = self.prepare_comparison_data (x_values, scale=True)
-        y_preds = self._y_scaler.inverse_transform (self._model.predict (x_eval))
-        self.print_summary (y_preds, np.ravel (y_actuals), " - NY Fed data points - our model against actual GDP growth")
-        self.print_summary (y_ny_fed_predictions, np.ravel (y_actuals), " - NY Fed data points - Fed nowcast against actual GDP growth")
+        for index, row in benchmark_df.iterrows ():
+            if np.isfinite (row ['Value']):
+                prediction_date = datetime.datetime.strptime (row ['Date'], Constant.DATE_STR_FMT_2)
+                qtr_end = datetime.datetime.strptime (row ['TargetPeriodDate'], Constant.DATE_STR_FMT_1)
+                # sn: revisit to see if the logic is good for data released past the quarter end but before the official gdp release
+                if prediction_date < qtr_end:
+                    days_prior = (qtr_end - prediction_date).days
+                    features_df = get_featurized_inputs (input_series, label_series [label_series ['Date']==qtr_end], days_prior=days_prior)
+                    if x_values is None:
+                        x_values = features_df
+                    else:
+                        x_values = pd.concat ([x_values, features_df], axis=0)
+        import pdb; pdb.set_trace ()
+        zzz = 1
 
 def main ():
     data = load_data (refresh_live_sources=False)
@@ -216,7 +187,7 @@ def main ():
     #mdl.fit_and_summarize_ann_model ()
     mdl.fit_and_summarize_rf_model ()
 
-    mdl.compare_with_benchmark (input_series, label_series)
+    #mdl.compare_with_benchmark (input_series, label_series)
 
 if __name__ == "__main__":
     main()
