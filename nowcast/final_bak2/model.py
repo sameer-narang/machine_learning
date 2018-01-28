@@ -61,14 +61,23 @@ class Model (object):
         self._X_scaler = None
 
     def prepare_training_data (self, x_df, y_df, scale=True):
-        x_df = x_df.reindex_axis (sorted (x_df.columns), axis = 1)
-        X = x_df.drop (columns=['Date', 'index'], axis=1).as_matrix ()
-        y = y_df.drop (columns=['Date', 'index'], axis=1).as_matrix ()
+        X = x_df.drop (columns=['Date'], axis=1).as_matrix ()
+        y = y_df.drop (columns=['Date'], axis=1).as_matrix ()
 
         self._X_train_and_val, self._X_test, self._y_train_and_val, self._y_test = \
             train_test_split (X, y, test_size=TEST_SIZE, random_state=self._seed)
         self._X_train, self._X_val, self._y_train, self._y_val = \
             train_test_split (self._X_train_and_val, self._y_train_and_val, test_size=TEST_SIZE, random_state=self._seed)
+
+        self._X_train = np.delete (self._X_train, 0, axis=1)
+        self._X_train_and_val = np.delete (self._X_train_and_val, 0, axis=1)
+        self._X_val = np.delete (self._X_val, 0, axis=1)
+        self._X_test = np.delete (self._X_test, 0, axis=1)
+
+        self._y_train = np.delete (self._y_train, 0, axis=1)
+        self._y_train_and_val = np.delete (self._y_train_and_val, 0, axis=1)
+        self._y_val = np.delete (self._y_val, 0, axis=1)
+        self._y_test = np.delete (self._y_test, 0, axis=1)
 
         if NA_FILL_VAL is None:
             fill_nan = Imputer (missing_values=np.nan, strategy='mean', axis=0)
@@ -101,9 +110,16 @@ class Model (object):
     def prepare_training_data_ts (self, x_df, y_df, scale=True):
         X =  x_df
         y = y_df
-        
-        X = X.reindex_axis (sorted (x_df.columns), axis = 1)
-        
+        ''''
+        X = x_df.drop (columns=['Date'], axis=1).as_matrix ()
+        y = y_df.drop (columns=['Date'], axis=1).as_matrix ()
+
+        self._X_train_and_val, self._X_test, self._y_train_and_val, self._y_test = \
+            train_test_split (X, y, test_size=TEST_SIZE, random_state=self._seed)
+        self._X_train, self._X_val, self._y_train, self._y_val = \
+            train_test_split (self._X_train_and_val, self._y_train_and_val, test_size=TEST_SIZE, random_state=self._seed)
+        '''
+        #import pdb; pdb.set_trace ()
         self._X_train = X [((X ['Date'] < TS_DATES ['VAL_START']) | (X ['Date'] >= TS_DATES ['TEST_END']))]
         self._y_train = y [((y ['Date'] < TS_DATES ['VAL_START']) | (y ['Date'] >= TS_DATES ['TEST_END']))]
         self._X_train_and_val = X [((X ['Date'] >= TS_DATES ['VAL_START']) & (X ['Date'] < TS_DATES ['VAL_END']) | \
@@ -115,15 +131,25 @@ class Model (object):
         self._X_test = X [((X ['Date'] >= TS_DATES ['TEST_START']) & (X ['Date'] < TS_DATES ['TEST_END']))]
         self._y_test = y [((y ['Date'] >= TS_DATES ['TEST_START']) & (y ['Date'] < TS_DATES ['TEST_END']))]
         
-        self._X_train = self._X_train.drop (columns=['Date', 'index'], axis=1).as_matrix ()
-        self._X_train_and_val = self._X_train_and_val.drop (columns=['Date', 'index'], axis=1).as_matrix ()
-        self._X_val = self._X_val.drop (columns=['Date', 'index'], axis=1).as_matrix ()
-        self._X_test = self._X_test.drop (columns=['Date', 'index'], axis=1).as_matrix ()
+        self._X_train = self._X_train.drop (columns=['Date'], axis=1).as_matrix ()
+        self._X_train_and_val = self._X_train_and_val.drop (columns=['Date'], axis=1).as_matrix ()
+        self._X_val = self._X_val.drop (columns=['Date'], axis=1).as_matrix ()
+        self._X_test = self._X_test.drop (columns=['Date'], axis=1).as_matrix ()
 
-        self._y_train = self._y_train.drop (columns=['Date', 'index'], axis=1).as_matrix ()
-        self._y_train_and_val = self._y_train_and_val.drop (columns=['Date', 'index'], axis=1).as_matrix ()
-        self._y_val = self._y_val.drop (columns=['Date', 'index'], axis=1).as_matrix ()
-        self._y_test = self._y_test.drop (columns=['Date','index'], axis=1).as_matrix ()
+        self._X_train = np.delete (self._X_train, 0, axis=1)
+        self._X_train_and_val = np.delete (self._X_train_and_val, 0, axis=1)
+        self._X_val = np.delete (self._X_val, 0, axis=1)
+        self._X_test = np.delete (self._X_test, 0, axis=1)
+
+        self._y_train = self._y_train.drop (columns=['Date'], axis=1).as_matrix ()
+        self._y_train_and_val = self._y_train_and_val.drop (columns=['Date'], axis=1).as_matrix ()
+        self._y_val = self._y_val.drop (columns=['Date'], axis=1).as_matrix ()
+        self._y_test = self._y_test.drop (columns=['Date'], axis=1).as_matrix ()
+
+        self._y_train = np.delete (self._y_train, 0, axis=1)
+        self._y_train_and_val = np.delete (self._y_train_and_val, 0, axis=1)
+        self._y_val = np.delete (self._y_val, 0, axis=1)
+        self._y_test = np.delete (self._y_test, 0, axis=1)
 
         if NA_FILL_VAL is None:
             fill_nan = Imputer (missing_values=np.nan, strategy='mean', axis=0)
@@ -154,8 +180,8 @@ class Model (object):
         
     
     def prepare_comparison_data (self, x_df, scale=True):
-        x_df = x_df.reindex (sorted (x_df.columns), axis = 1)
-        X = x_df.drop (columns=['Date', 'y_ny_fed_prediction', 'Gross domestic product', 'index', 'index.1'], axis=1).as_matrix ()
+        X = np.delete (x_df.drop (columns=['Date', 'y_ny_fed_prediction', 'Gross domestic product'], axis=1).as_matrix (), 0, axis=1)
+        X = np.delete (X, -1, axis=1)
         eval_df = X
         if NA_FILL_VAL is None:
             eval_df = self._X_imputer.transform (eval_df)
@@ -166,8 +192,7 @@ class Model (object):
             eval_df = self._X_scaler.transform (eval_df)
 
         return eval_df
- 
-   
+    
     def print_summary (self, y_preds, y_acts, info):
         print ("Predictions vs actual values:" + info)
         print (["{0:.1f}".format(y_pred) for y_pred in y_preds])
@@ -266,7 +291,7 @@ def main ():
     features_df = get_featurized_inputs (input_series, label_series, mths_to_combine=MTHS_TO_COMBINE)
 
     mdl = Model (days_prior=0, seed=RNDM_SEED_1)
-    mdl.prepare_training_data (features_df, label_series, scale=True)
+    mdl.prepare_training_data_ts (features_df, label_series, scale=True)
     #mdl.fit_and_summarize_ann_model ()
     mdl.fit_and_summarize_rf_model ()
 
