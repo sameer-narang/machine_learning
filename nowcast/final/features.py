@@ -123,7 +123,7 @@ def featurize_df (x_df, y_df, mths_to_combine, days_prior=0):
     quarters = []
     feat_col = 'Value'
     num_years = 2
-    result = {'Date': [], 'yoy_diff': [], 'yoy_ratio': []}
+    result = {'Date': [], 'yoy_diff': [], 'yoy_ratio': [], 'qoq_diff': [], 'qoq_ratio': []}
     num_periods_per_series = num_years * int (12/ mths_to_combine)
     x = [np.nan] * num_periods_per_series
     for i in range (0, num_periods_per_series):
@@ -165,7 +165,14 @@ def featurize_df (x_df, y_df, mths_to_combine, days_prior=0):
         else:
             result ['yoy_ratio'].append (np.nan)
         result ['yoy_diff'].append (numer - base)
-
+        q_latest = x [0]
+        q_prev = x [1]
+        if q_prev != 0 and np.isfinite (q_prev):
+            result ['qoq_ratio'].append (q_latest/ q_prev)
+        else:
+            result ['qoq_ratio'].append (np.nan)
+        result ['qoq_diff'].append (q_latest - q_prev)
+        
     return pd.DataFrame (result)
 
 

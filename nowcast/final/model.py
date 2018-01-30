@@ -154,8 +154,9 @@ class Model (object):
         
     
     def prepare_comparison_data (self, x_df, scale=True):
-        x_df = x_df.reindex (sorted (x_df.columns), axis = 1)
-        X = x_df.drop (columns=['Date', 'y_ny_fed_prediction', 'Gross domestic product', 'index', 'index.1'], axis=1).as_matrix ()
+        X = x_df.drop (columns=['Date', 'y_ny_fed_prediction', 'Gross domestic product', 'index', 'index.1'], axis=1)
+        X.reindex (sorted (x_df.columns), axis=1)
+        X = X.as_matrix ()
         eval_df = X
         if NA_FILL_VAL is None:
             eval_df = self._X_imputer.transform (eval_df)
@@ -260,6 +261,7 @@ class Model (object):
         self.print_summary (y_ny_fed_predictions, np.ravel (y_actuals), " - NY Fed data points - Fed nowcast against actual GDP growth")
 
 def main ():
+    #import pdb; pdb.set_trace ()
     data = load_data (refresh_live_sources=False)
     input_series, label_series = add_standard_columns (data)
     label_series = label_series.reset_index ()

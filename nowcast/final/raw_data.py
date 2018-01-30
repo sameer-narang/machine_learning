@@ -8,7 +8,8 @@ import util
 
 from util import *
 
-quandl.ApiConfig.api_key = "8DrzzNxwBzDzh_1jE6Dj"
+#quandl.ApiConfig.api_key = "8DrzzNxwBzDzh_1jE6Dj"
+quandl.ApiConfig.api_key = "BmgAVGn8eqi_w_s-Wdey"
 
 manual_csv_codes = ['VIXCLS']
 
@@ -29,7 +30,7 @@ quandl_codes = set (['FED/FR515035023_Q', 'FED/FR515035023_Q', 'FED/B1027NFRDM',
                     "FRED/HOUST2UMNEQ", "FRED/HOUST2UMSQ", "FRED/HOUST2UMWQ", "FRED/TCU",
                     "FED/IP_B50001_N", "FRED/GACNNA156MNFRBNY", "FRED/RSAFSNA", "FRED/PPIACO",
                     "FRED/JTSJOL", "ISM/NONMAN_NMI", "FRED/UMTMTI", "FRED/IEAMGSN",
-                    "FRED/EXPGS", "FED/FU145020005_Q"
+                    "FRED/EXPGS", "FED/FU145020005_Q", "BLSI/WPU115"
 ])
 
 
